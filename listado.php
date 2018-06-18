@@ -7,6 +7,7 @@
     $paginado ="";
     $pagina = $_POST["pagina"]??1;
     $orden = $_POST["orden"]??"";
+    $orden2 = $_POST["orden2"]??"";
     $totalRegistros = 5;
 
     $anterior = $pagina - 1;
@@ -18,14 +19,15 @@
     if (empty($orden)) {
         $ord = "";
     } else {
-        $ord = " ORDER BY $orden";
+        //al saber que una tiene datos, sabemos que la otra variable tambien tiene, no hay que comprobarlo
+        $ord = " ORDER BY juegos.$orden $orden2";
     }
     
     $sql = "SELECT * FROM `juegos` INNER JOIN generos on juegos.idGen=generos.idGen";
 
     // Buscamos en la base de datos los juegos
-    //$res = $lnk->query($sql . $lim . $ord) ;
-    $res = $lnk->query($sql) ;
+    $res = $lnk->query($sql . $ord . $lim) ;
+    //$res = $lnk->query($sql) ;
 
     
     if (!$res->num_rows) {
@@ -74,7 +76,7 @@
 
     //Cuantas páginas
     $resultado2 = $lnk->query($sql);
-    $total = $resultado2->num_rows;
+    $total = $resultado2->num_rows - 1;
     $numpaginas=intval($total / $totalRegistros)+1;
 
     $paginado="<ul class=\"pagination\">";

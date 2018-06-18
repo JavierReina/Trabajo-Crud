@@ -66,22 +66,23 @@
         var nota;
         var lanzamiento;
         var cop;
-        var orden;
+        var orden;//para saber con cual campo de la tabla se va a ordenar
+        var orden2;//ascendente o descendente
 
-        function listar(pagina) {
+        function listar(pagina, orden, orden2) {
 
             $.ajax({
                 method: "post",
                 url: "listado.php",
                 dataType: "json", 
-                data: {"pagina": pagina, "orden": orden}
+                data: {"pagina": pagina, "orden": orden, "orden2": orden2}
             })
             .fail(function(data) {
                 console.log(data);
             })
             .done(function(html) {
                 $("#resultado").html(html["codigo"]);
-                //$("#paginacion").html(html["paginado"]);
+                $("#paginacion").html(html["paginado"]);
                 
                 //tambien vamos a cambiar la pagina actual
                 pagina = html["actual"];
@@ -185,18 +186,21 @@
                 // Definimos un evento para añadir
                 $( ".accionAdd" ).on( "click", function() {
                     cop = "add";
-                    abrir();
+                    //como no sabemos si el usuario a pulsado editar, nos aseguramos de poner en blanco los campos
+                    iden="";
+                    titulo="";
+                    iden="";
+                    genero="";
+                    nota="";
+                    lanzamiento="";
+                    //tambien le queremos quitar el readonly
+                    $('#iden').prop('readonly', false);
+
+                    setTimeout(function() {
+                        abrir();
+                    }, 200);
                     
                 });
-
-                // Definimos un evento para eliminar
-                $("#resultado").on("click",".accionBorrar",function() {
-                    iden = $(this).data("iden") ;
-                    selecciona(iden);
-                    cop = "";
-                    //abrir segundo dialog
-                    Enviar(iden);
-                    }) ;
 
                 function abrir () {
                     dialog.dialog("open");
@@ -250,26 +254,39 @@
             });
 
         //segundo dialog
-        /*$(function() {
+        $(function() {
             var dialog, form;
+
+            function Enviar(iden) {
+                $.ajax({
+                    method: "post",
+                    url: "manipulaBase.php", 
+                    data: {"iden": iden}
+                })
+                .done(function(html) {
+                    $("#confirma").dialog("close");
+                    listar(1);
+                })
+            }
 
             dialog = $("#confirma").dialog({
                 autoOpen: false,
                 modal: true,
                 buttons: {
-                    "Enviar": Enviar,
+                    "Si": function() {
+                        Enviar(iden);
+                    },
                     "Cancelar": function() {
-                        dialogo.dialog( "close" );
+                        dialog.dialog( "close" );
                     }
-                },
-                close: function() {
-                    form[ 0 ].reset();
-                    allFields.removeClass( "ui-state-error" );
                 }
 
 
+
+
             });//segundo dialog
-            */
+        });
+        
 
 
         //datepicker
@@ -289,10 +306,11 @@
                 listar(pagina);
             });
             
-            function ordenacion() {
+            $("#ordena,#ordena2").change(function() {
                 orden = $("#ordena").val();
-                listar(1);
-            }
+                orden2 = $("#ordena2").val();
+                listar(1, orden, orden2);
+            });
 
             $("#cierra").on("click", function(){
 
@@ -308,17 +326,31 @@
 
             });
 
+            // Definimos un evento para eliminar
+            $("#resultado").on("click",".accionBorrar",function() {
+                    iden = $(this).data("iden") ;
+                    selecciona(iden);
+                    cop = "";
+                    $("#confirma").dialog("open");
+                    //Enviar(iden);
+                    }) ;
+
         }) ;//ready
     </script>
     
 </head>
 <body>
-    <!--<select id="ordena" onchange="ordenacion()">
+    <select id="ordena">
         <option value="titulo">Título</option>
         <option value="idGen">Género</option>
         <option value="nota">Nota</option>
         <option value="lanzamiento">Fecha de Salida</option>
-    </select>-->
+    </select>
+    <select id="ordena2">
+        <option value="ASC">Ascendente</option>
+        <option value="DESC">Descendente</option>
+    </select>
+    <!--
     <?php
         if (empty($_SESSION)) {
             ?>
@@ -329,7 +361,7 @@
             <strong><a href="#" id="cierra">Log Out</a></strong>
             <?php
         }
-    ?>
+    ?>-->
     <button class="btn btn-sm btn-primary accionAdd">Añadir</button>
     <div id="contenedor">
         <strong>
@@ -397,10 +429,10 @@
     
 
 
-    <!--<div id="confirma">
-        <h3>Confirmación de Eliminación</h3>
+    <div id="confirma">
+        <h3>Confirmación</h3>
         <p>Está a punto de borrar un campo de la base de datos.</p>
         <strong><p>¿Estás seguro?</p></strong>
-    </div>-->
+    </div>
 </body>
 </html>
